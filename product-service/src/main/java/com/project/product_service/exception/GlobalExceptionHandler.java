@@ -33,6 +33,11 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, String.join(", ", message));
     }
 
+    @ExceptionHandler(FileStorageException.class)
+    public ResponseEntity<BaseResponse<Object>> handleFileStorage(FileStorageException exception) {
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, exception.getMessage());
+    }
+
     private ResponseEntity<BaseResponse<Object>> build(HttpStatus status, String message) {
         return ResponseEntity.status(status).body(BaseResponse.error(message));
     }

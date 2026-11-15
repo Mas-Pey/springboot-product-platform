@@ -3,7 +3,9 @@ package com.project.product_service.controller;
 import com.project.product_service.dto.request.ProductRequestDto;
 import com.project.product_service.dto.response.BaseResponse;
 import com.project.product_service.dto.response.ProductResponseDto;
+import com.project.product_service.dto.response.ReportResponseDto;
 import com.project.product_service.service.ProductService;
+import com.project.product_service.service.ReportService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +23,7 @@ import java.util.List;
 public class ProductController {
 
     private final ProductService productService;
+    private final ReportService reportService;
 
     @PostMapping
     public ResponseEntity<BaseResponse<ProductResponseDto>> create(
@@ -62,5 +65,11 @@ public class ProductController {
         log.info("Menerima request impor internal sebanyak {} produk", requests.size());
         List<ProductResponseDto> saved = productService.importProducts(requests);
         return BaseResponse.ok(saved.size() + " produk berhasil diimpor", saved);
+    }
+
+    @PostMapping("/report")
+    public BaseResponse<ReportResponseDto> generateReport() {
+        ReportResponseDto report = reportService.generateReport();
+        return BaseResponse.ok("Laporan CSV berhasil dibuat", report);
     }
 }

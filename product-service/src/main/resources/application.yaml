@@ -31,3 +31,16 @@ eureka:
 
 dummyjson:
   url: https://dummyjson.com
+
+minio:
+  url: http://localhost:9000
+  access:
+    name: ${MINIO_USER:}
+    secret: ${MINIO_PASSWORD:}
+  bucket:
+    name: product-report
+  presigned-expiry-minutes: 2
+
+report:
+  scheduler:
+    cron: "0 */2 * * * *"
