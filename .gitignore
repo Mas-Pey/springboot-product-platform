@@ -14,3 +14,8 @@ target/
 
 # JVM crash log
 hs_err_pid*.log
+
+# Environment variables (Secret)
+.env
+*.env
+
