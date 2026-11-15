@@ -12,6 +12,8 @@ import com.project.product_service.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -47,7 +49,9 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @Cacheable(value = "detail", key = "#id")
     public ProductResponseDto getById(Long id) {
+        log.info("Mengambil detail produk id={} dari tabel produk", id);
         ProductEntity entity = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException(id));
         return ProductResponseDto.from(entity);
@@ -70,7 +74,9 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CacheEvict(value = "detail", key = "#id")
     public ProductResponseDto update(Long id, ProductRequestDto request) {
+
         ProductEntity entity = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException(id));
 
@@ -92,6 +98,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    @CacheEvict(value = "detail", key = "#id")
     public void delete(Long id) {
         ProductEntity entity = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException(id));
