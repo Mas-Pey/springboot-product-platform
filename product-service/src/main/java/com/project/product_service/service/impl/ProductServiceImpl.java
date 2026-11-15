@@ -1,11 +1,13 @@
 package com.project.product_service.service.impl;
 
+import com.project.product_service.dto.feign.DummyProductDto;
 import com.project.product_service.dto.request.ProductRequestDto;
 import com.project.product_service.dto.response.ProductResponseDto;
 import com.project.product_service.entity.ProductEntity;
 import com.project.product_service.exception.ProductAlreadyExistException;
 import com.project.product_service.exception.ProductNotFoundException;
 import com.project.product_service.repository.ProductRepository;
+import com.project.product_service.rest.DummyJsonClient;
 import com.project.product_service.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
+    private final DummyJsonClient dummyJsonClient;
 
     @Override
     public ProductResponseDto create(ProductRequestDto request) {
@@ -38,6 +41,8 @@ public class ProductServiceImpl implements ProductService {
         entity.setCreatedAt(LocalDateTime.now());
 
         productRepository.save(entity);
+        syncAddToDummyJson(entity);
+
         return ProductResponseDto.from(entity);
     }
 
@@ -81,6 +86,8 @@ public class ProductServiceImpl implements ProductService {
         entity.setRating(request.getRating());
 
         productRepository.save(entity);
+        syncUpdateToDummyJson(id, entity);
+
         return ProductResponseDto.from(entity);
     }
 
@@ -89,6 +96,7 @@ public class ProductServiceImpl implements ProductService {
         ProductEntity entity = productRepository.findById(id)
                 .orElseThrow(() -> new ProductNotFoundException(id));
         productRepository.delete(entity);
+        syncDeleteToDummyJson(id);
     }
 
     @Override
@@ -127,5 +135,34 @@ public class ProductServiceImpl implements ProductService {
         }
 
         return tersimpan;
+    }
+
+    private void syncAddToDummyJson(ProductEntity entity) {
+        try {
+            DummyProductDto payload = new DummyProductDto(
+                    null, entity.getNama(), entity.getHarga(), entity.getKategori(), entity.getBrand(), entity.getRating(), null);
+            DummyProductDto response = dummyJsonClient.addProduct(payload);
+            log.info("[DummyJSON Sync - POST] Response: {}", response);
+        } catch (Exception e) {
+            log.warn("[DummyJSON Sync - POST] Gagal sinkronisasi ke DummyJSON (data lokal tetap tersimpan): {}", e.getMessage());
+        }
+    }
+    private void syncUpdateToDummyJson(Long id, ProductEntity entity) {
+        try {
+            DummyProductDto payload = new DummyProductDto(
+                    null, entity.getNama(), entity.getHarga(), entity.getKategori(), entity.getBrand(), entity.getRating(), null);
+            DummyProductDto response = dummyJsonClient.updateProduct(id, payload);
+            log.info("[DummyJSON Sync - PUT] Response: {}", response);
+        } catch (Exception e) {
+            log.warn("[DummyJSON Sync - PUT] Gagal sinkronisasi ke DummyJSON untuk id={} (data lokal tetap terupdate): {}", id, e.getMessage());
+        }
+    }
+    private void syncDeleteToDummyJson(Long id) {
+        try {
+            DummyProductDto response = dummyJsonClient.deleteProduct(id);
+            log.info("[DummyJSON Sync - DELETE] Response: {}", response);
+        } catch (Exception e) {
+            log.warn("[DummyJSON Sync - DELETE] Gagal sinkronisasi ke DummyJSON untuk id={} (data lokal tetap terhapus): {}", id, e.getMessage());
+        }
     }
 }
